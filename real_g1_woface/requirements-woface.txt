@@ -1,0 +1,15 @@
+# Python 3.10 environment for the face-free G1 Atoms app (CPU only).
+# Versions are those of the validated server env (conda env `flashhead`).
+# torch is only imported by the vendored Web app and faceless.py; the CPU build
+# is enough (on Jetson use the matching JetPack wheel instead).
+aiohttp==3.13.5
+aiortc==1.14.0
+av==16.1.0
+google-genai==1.73.1
+imageio==2.37.3
+librosa==0.11.0
+loguru==0.7.3
+numpy==2.2.6
+torch==2.7.1
+# Optional: only used by web_overlay/compositor.py when present.
+opencv-python-headless==4.13.0.92

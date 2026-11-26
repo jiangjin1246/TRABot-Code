@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>G1 Atom Player</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0f14; --panel:#141a22; --line:#273241; --muted:#91a0b3; --text:#e9f0f7; --blue:#4ca6ff; --green:#4fd18b; --red:#ff6b6b; --amber:#ffc857; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:3; background:#0b0f14f2; }
+    h1 { margin:0; font-size:18px; }
+    .spacer { flex:1; }
+    .pill { border:1px solid var(--line); border-radius:999px; padding:4px 9px; color:var(--muted); }
+    .pill.ok { color:var(--green); border-color:#245f43; } .pill.bad { color:var(--red); border-color:#713434; }
+    main { display:grid; grid-template-columns:minmax(330px,38%) 1fr; min-height:calc(100vh - 58px); }
+    aside { border-right:1px solid var(--line); padding:12px; overflow:auto; max-height:calc(100vh - 58px); position:sticky; top:58px; }
+    .filters { display:grid; grid-template-columns:1fr 150px 120px; gap:7px; margin-bottom:10px; }
+    input,select,textarea,button { font:inherit; color:var(--text); background:#0f151d; border:1px solid var(--line); border-radius:7px; padding:8px 9px; }
+    button { cursor:pointer; } button:hover:not(:disabled) { border-color:var(--blue); } button:disabled { opacity:.42; cursor:not-allowed; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th { color:var(--muted); position:sticky; top:0; background:var(--panel); text-align:left; }
+    th,td { padding:7px 6px; border-bottom:1px solid #202936; white-space:nowrap; }
+    tbody tr { cursor:pointer; } tbody tr:hover { background:#18212c; } tbody tr.selected { background:#15304a; }
+    .status-approved { color:var(--green); } .status-rejected { color:var(--red); } .status-pending,.status-stale { color:var(--amber); }
+    section.content { padding:16px; overflow:auto; }
+    .grid { display:grid; grid-template-columns:minmax(360px,1.15fr) minmax(300px,.85fr); gap:14px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+    h2,h3 { margin:0 0 10px; } h2 { font-size:18px; } h3 { font-size:15px; color:#cbd8e5; }
+    video { width:100%; min-height:260px; background:#05070a; border-radius:8px; }
+    dl { display:grid; grid-template-columns:145px 1fr; gap:6px 9px; margin:0; font-size:12px; }
+    dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .metric { padding:9px; background:#0f151d; border-radius:7px; } .metric b { display:block; font-size:17px; } .metric span { color:var(--muted); font-size:11px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .row > input, .row > textarea { flex:1; }
+    textarea { width:100%; min-height:64px; resize:vertical; }
+    .primary { background:#163c60; border-color:#286da7; } .danger { background:#541f27; border-color:#8f3441; } .success { background:#174c32; border-color:#287a50; }
+    .banner { padding:10px; border-radius:7px; background:#372d14; color:#ffe09a; margin-bottom:10px; }
+    .sequence-panel { margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+    .sequence-panel h3 { margin:0; }
+    .sequence-queue { display:grid; gap:8px; margin:10px 0; }
+    .sequence-empty { padding:14px; border:1px dashed #3a485a; border-radius:8px; color:var(--muted); text-align:center; }
+    .sequence-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px; background:#0f151d; border:1px solid var(--line); border-radius:8px; }
+    .sequence-item strong,.sequence-item code { display:block; overflow-wrap:anywhere; }
+    .sequence-item code { margin-top:2px; color:#afc5d9; font-size:11px; }
+    .sequence-controls { display:flex; gap:5px; }
+    .sequence-controls button { padding:5px 8px; }
+    .sequence-bridge { margin:0 12px; padding:7px 10px; border-left:2px solid var(--blue); background:#102033; color:#bcd8ef; font-size:12px; }
+    pre { margin:0; max-height:260px; overflow:auto; padding:10px; border-radius:7px; background:#080c11; color:#c2d1df; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .small { color:var(--muted); font-size:12px; }
+    @media (max-width:1000px) { main { grid-template-columns:1fr; } aside { position:relative; top:0; max-height:45vh; border-right:0; border-bottom:1px solid var(--line); } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>G1 Atom Player</h1>
+    <span id="catalogPill" class="pill">catalog…</span>
+    <span id="previewPill" class="pill">preview…</span>
+    <span id="realPill" class="pill">真机状态…</span>
+    <span class="spacer"></span>
+    <span id="runPill" class="pill">idle</span>
+  </header>
+  <main>
+    <aside>
+      <div class="filters">
+        <input id="search" placeholder="搜索 index / atom / function">
+        <select id="functionFilter"><option value="">全部 function</option></select>
+        <select id="reviewFilter"><option value="">全部审核</option><option>pending</option><option>approved</option><option>rejected</option><option>stale</option></select>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>function</th><th>Atom</th><th>秒</th><th>审核</th><th>位置门</th></tr></thead>
+        <tbody id="atomRows"></tbody>
+      </table>
+    </aside>
+    <section class="content">
+      <div id="empty" class="card">请选择一个 Atom。</div>
+      <div id="detail" hidden>
+        <div class="grid">
+          <div>
+            <div class="card">
+              <h2 id="title"></h2>
+              <video id="video" controls loop playsinline></video>
+              <p class="small">这是正式 catalog 对应的离线动作主体预览；不会控制 8765，也不会控制真机。真实进出动作使用 minimum_jerk_v1 bridge。</p>
+            </div>
+            <div class="card">
+              <h3>视觉审核</h3>
+              <label class="row"><input id="watched" type="checkbox" style="flex:0">我已完整看过当前视频，并确认现场单动作测试区域可清空</label>
+              <textarea id="reviewNote" placeholder="审核备注"></textarea>
+              <div class="row" style="margin-top:8px">
+                <input id="reviewer" placeholder="审核人">
+                <button id="approveBtn" class="success">批准当前版本</button>
+                <button id="rejectBtn" class="danger">拒绝</button>
+                <button id="pendingBtn">重置 pending</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <h3>Exact binding</h3>
+              <dl id="binding"></dl>
+            </div>
+            <div class="card">
+              <h3>动作指标与关节位置门</h3>
+              <div id="metrics" class="metrics"></div>
+              <div class="row" style="margin-top:10px"><button id="validateBtn" class="primary">重新执行完整校验</button><span id="validationText"></span></div>
+              <pre id="validationOutput" style="margin-top:10px"></pre>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>真机播放</h3>
+          <div id="realBanner" class="banner"></div>
+          <p class="small">执行链：采集并保持当前腿部/腰部姿态 → 手臂 minimum-jerk → 原始 linear Atom → 手臂 minimum-jerk → catalog safe_neutral → release。Atom 正文保留原始 q/t，不设分段速度门；minimum-jerk bridge 仍按 1.0 rad/s 计算时长。软件 Stop 不替代物理急停。</p>
+          <div class="row">
+            <button id="playBtn" class="danger">在 G1 上播放一次</button>
+            <button id="stopBtn">Stop / 安全释放</button>
+          </div>
+          <p class="small">已批准的当前精确版本可一键播放；每次点击只提交这一条 Atom，不会自动连播。</p>
+          <div class="sequence-panel">
+            <div class="row">
+              <h3>手动 Bridge 测试队列</h3>
+              <span id="sequenceCount" class="pill">0 / 3</span>
+              <span class="spacer"></span>
+              <button id="addSequenceBtn">加入当前 Atom</button>
+              <button id="clearSequenceBtn">清空</button>
+            </div>
+            <p class="small">仅可加入当前精确版本为 approved 且位置门通过的 Atom，最多三条。连续播放时只在相邻 Atom 之间执行 minimum-jerk bridge；只有最后一条结束后才回 safe_neutral 并 release。</p>
+            <div id="sequenceQueue" class="sequence-queue"></div>
+            <p id="sequenceSummary" class="small"></p>
+            <div class="row">
+              <button id="playSequenceBtn" class="danger">连续播放队列一次</button>
+              <span class="small">队列至少需要两条；运行或安全释放期间不可编辑。</span>
+            </div>
+          </div>
+          <pre id="runOutput" style="margin-top:10px">idle</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+<script>
+const JOINTS=['left_shoulder_pitch','left_shoulder_roll','left_shoulder_yaw','left_elbow','left_wrist_roll','left_wrist_pitch','left_wrist_yaw','right_shoulder_pitch','right_shoulder_roll','right_shoulder_yaw','right_elbow','right_wrist_roll','right_wrist_pitch','right_wrist_yaw'];
+const state={health:null,atoms:[],selected:null,token:'',run:{status:'idle'},sequence:[],submitting:false};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,options={}){const method=(options.method||'GET').toUpperCase();const headers={'Content-Type':'application/json',...(options.headers||{})};if(method!=='GET'&&state.token)headers['X-G1-Atom-Token']=state.token;const r=await fetch(url,{...options,headers});const j=await r.json();if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);return j;}
+function n(v,d=3){return Number(v).toFixed(d)}
+function runBusy(){return state.submitting||['running','canceling'].includes(state.run?.status)}
+function sequenceAtoms(){return state.sequence.map(id=>state.atoms.find(a=>a.entry_id===id)).filter(Boolean)}
+function queueEligible(a){return Boolean(a?.review?.current&&a.review.status==='approved'&&a.validation?.ok)}
+function qVector(atom,key){const q=atom?.[key];if(Array.isArray(q)&&q.length===JOINTS.length)return q.map(Number);if(q&&typeof q==='object'&&!Array.isArray(q)&&JOINTS.every(j=>j in q))return JOINTS.map(j=>Number(q[j]));return null}
+function transition(from,to){const q1=qVector(from,'last_q'),q0=qVector(to,'first_q');if(!q1||!q0||q1.some(v=>!Number.isFinite(v))||q0.some(v=>!Number.isFinite(v)))return null;const delta=Math.max(...q1.map((v,i)=>Math.abs(v-q0[i])));const ticks=Math.max(2,Math.ceil(1.875*delta*25-1e-12));return {delta,duration:ticks/25}}
+async function load(){
+  const h=await api('/api/health');state.health=h;state.token=h.csrf_token;state.run=h.run||state.run;const a=await api('/api/atoms');state.atoms=a.atoms;
+  $('catalogPill').textContent=`catalog ${h.catalog_sha256.slice(0,8)} · ${h.atom_count}`;$('catalogPill').className='pill ok';
+  $('previewPill').textContent=`视频 ${h.preview_count}/${h.atom_count}`;$('previewPill').className=`pill ${h.preview_count===h.atom_count?'ok':'bad'}`;
+  $('realPill').textContent=h.real_enabled?`真机已启用 · ${h.network_interface}`:'真机发送已关闭';$('realPill').className=`pill ${h.real_enabled?'bad':'ok'}`;
+  [...new Set(state.atoms.map(x=>x.function))].sort().forEach(f=>$('functionFilter').insertAdjacentHTML('beforeend',`<option>${esc(f)}</option>`));
+  renderList();renderSequence();if(state.atoms.length)select(state.atoms[0].entry_id);pollRun();
+}
+function filtered(){const q=$('search').value.toLowerCase(),f=$('functionFilter').value,r=$('reviewFilter').value;return state.atoms.filter(a=>(!q||`${a.index} ${a.atom_id} ${a.function}`.toLowerCase().includes(q))&&(!f||a.function===f)&&(!r||a.review.status===r));}
+function renderList(){
+  $('atomRows').innerHTML=filtered().map(a=>`<tr data-id="${a.entry_id}" class="${state.selected?.entry_id===a.entry_id?'selected':''}"><td>${a.index}</td><td>${esc(a.function)}</td><td title="${esc(a.atom_id)}">${esc(a.atom_id.slice(0,28))}</td><td>${n(a.duration,2)}</td><td class="status-${esc(a.review.status)}">${esc(a.review.status)}</td><td class="${a.validation.ok?'status-approved':'status-rejected'}">${a.validation.ok?'PASS':'BLOCK'}</td></tr>`).join('');
+  document.querySelectorAll('#atomRows tr').forEach(row=>row.onclick=()=>select(row.dataset.id));
+}
+function metric(label,value){return `<div class="metric"><b>${esc(value)}</b><span>${esc(label)}</span></div>`}
+function renderSequence(){
+  const atoms=sequenceAtoms(),busy=runBusy(),parts=[];let bridgeTotal=0,complete=true;
+  atoms.forEach((a,i)=>{
+    if(i){const t=transition(atoms[i-1],a);if(t){bridgeTotal+=t.duration;parts.push(`<div class="sequence-bridge">Bridge ${i} → ${i+1} · nominal max Δq <b>${n(t.delta,4)} rad</b> · minimum-jerk <b>${n(t.duration,2)} s</b></div>`)}else{complete=false;parts.push(`<div class="sequence-bridge status-stale">Bridge ${i} → ${i+1} · 端点数据不可用，请刷新页面</div>`)}}
+    parts.push(`<div class="sequence-item"><div><strong>${i+1}. #${a.index} · ${esc(a.function)}</strong><code>${esc(a.atom_id)}</code></div><div class="sequence-controls"><button data-sequence-action="up" data-index="${i}" ${busy||i===0?'disabled':''}>上移</button><button data-sequence-action="down" data-index="${i}" ${busy||i===atoms.length-1?'disabled':''}>下移</button><button data-sequence-action="remove" data-index="${i}" ${busy?'disabled':''}>移除</button></div></div>`);
+  });
+  $('sequenceQueue').innerHTML=parts.join('')||'<div class="sequence-empty">从左侧选择已批准 Atom，再点击“加入当前 Atom”。</div>';
+  $('sequenceCount').textContent=`${atoms.length} / 3`;
+  $('sequenceSummary').textContent=atoms.length<2?'加入至少两条后，将在这里显示相邻端点差与 bridge 时长。':complete?`共 ${atoms.length} 条 Atom，${atoms.length-1} 段 bridge，nominal bridge 合计 ${n(bridgeTotal,2)} s。`:'缺少端点数据，暂时无法完整预估 bridge。';
+  updateButtons();
+}
+async function select(id){
+  let a=state.atoms.find(x=>x.entry_id===id);if(!a)return;
+  try{a=(await api(`/api/atoms/${encodeURIComponent(id)}`)).atom}catch(e){alert(e.message);return}
+  const i=state.atoms.findIndex(x=>x.entry_id===id);if(i>=0)state.atoms[i]=a;state.selected=a;renderList();$('empty').hidden=true;$('detail').hidden=false;
+  $('title').textContent=`#${a.index} · ${a.function}`;
+  $('video').src=a.preview_available?`/api/atoms/${encodeURIComponent(a.entry_id)}/video?sha256=${encodeURIComponent(a.preview_clip_sha256)}`:'';$('video').hidden=!a.preview_available;
+  $('watched').checked=false;$('reviewNote').value=a.review.note||'';$('reviewer').value=a.review.reviewer||'';
+  $('binding').innerHTML=[['entry_id',a.entry_id],['atom_id',a.atom_id],['version',a.version],['revision',a.revision],['content_sha256',a.content_sha256],['motion_sha256',a.motion_sha256],['preview_clip_sha256',a.preview_clip_sha256],['catalog_sha256',state.health.catalog_sha256],['interpolation','linear']].map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+  $('metrics').innerHTML=metric('duration',`${n(a.duration,3)} s`)+metric('frames',a.frame_count)+metric('max |q|',`${n(a.max_abs_q)} rad`)+metric('max segment |dq| (仅指标)',`${n(a.max_segment_velocity)} rad/s`)+metric('bridge in',`${n(a.bridge_from_neutral)} s`)+metric('bridge out',`${n(a.bridge_to_neutral)} s`)+metric('visual review',a.review.status)+metric('joint position gate',a.validation.ok?'PASS':'BLOCK');
+  $('validationText').textContent=a.validation.ok?'当前配置通过':'当前配置阻止真机执行';$('validationText').className=a.validation.ok?'status-approved':'status-rejected';
+  $('validationOutput').textContent=JSON.stringify(a.validation,null,2);
+  $('realBanner').textContent=state.health.real_enabled?'真机发送已启用。确保物理急停和现场操作员就位。':'当前为安全模式：G1_ATOM_REAL_ENABLED=0，不会建立 DDS 真机执行。';
+  renderSequence();
+}
+function updateButtons(){const a=state.selected,busy=runBusy(),atoms=sequenceAtoms(),ready=atoms.length>=2&&atoms.length<=3&&atoms.every(queueEligible)&&atoms.slice(1).every((x,i)=>transition(atoms[i],x));if(a){const approved=a.review.current&&a.review.status==='approved';$('approveBtn').disabled=busy||!$('watched').checked;$('rejectBtn').disabled=busy;$('pendingBtn').disabled=busy;$('validateBtn').disabled=busy;$('playBtn').disabled=busy||!(state.health.real_enabled&&approved&&a.validation.ok);$('addSequenceBtn').disabled=busy||state.sequence.length>=3||state.sequence.includes(a.entry_id)||!queueEligible(a)}else{$('addSequenceBtn').disabled=true}$('clearSequenceBtn').disabled=busy||!state.sequence.length;$('playSequenceBtn').disabled=busy||!state.health?.real_enabled||!ready}
+async function setReview(status){const a=state.selected;if(!a||runBusy())return;if(status==='approved'&&!$('watched').checked)return;try{const j=await api(`/api/atoms/${encodeURIComponent(a.entry_id)}/review`,{method:'POST',body:JSON.stringify({status,note:$('reviewNote').value,reviewer:$('reviewer').value,watched:status==='approved'&&$('watched').checked})});a.review=j.review;if(!queueEligible(a))state.sequence=state.sequence.filter(id=>id!==a.entry_id);renderList();renderSequence();select(a.entry_id)}catch(e){alert(e.message)}}
+async function validate(){const a=state.selected;if(!a)return;$('validationOutput').textContent='validating…';try{const j=await api(`/api/atoms/${encodeURIComponent(a.entry_id)}/validate`,{method:'POST',body:'{}'});$('validationOutput').textContent=JSON.stringify(j.validation,null,2)}catch(e){$('validationOutput').textContent=e.message}}
+async function play(){const a=state.selected;if(!a||runBusy())return;state.submitting=true;renderSequence();try{const j=await api(`/api/atoms/${encodeURIComponent(a.entry_id)}/play`,{method:'POST',body:JSON.stringify({confirm_atom_id:a.atom_id})});state.run=j.run||state.run}catch(e){alert(e.message)}finally{state.submitting=false;pollRun()}}
+function addSequence(){const a=state.selected;if(runBusy()||!queueEligible(a)||state.sequence.length>=3||state.sequence.includes(a.entry_id))return;state.sequence.push(a.entry_id);renderSequence()}
+function editSequence(action,index){if(runBusy()||index<0||index>=state.sequence.length)return;if(action==='remove')state.sequence.splice(index,1);else if(action==='up'&&index>0)[state.sequence[index-1],state.sequence[index]]=[state.sequence[index],state.sequence[index-1]];else if(action==='down'&&index<state.sequence.length-1)[state.sequence[index+1],state.sequence[index]]=[state.sequence[index],state.sequence[index+1]];renderSequence()}
+function clearSequence(){if(runBusy())return;state.sequence=[];renderSequence()}
+async function playSequence(){const atoms=sequenceAtoms();if(runBusy()||atoms.length<2||atoms.length>3||atoms.some(a=>!queueEligible(a))||atoms.slice(1).some((a,i)=>!transition(atoms[i],a)))return;state.submitting=true;renderSequence();try{const j=await api('/api/run/sequence',{method:'POST',body:JSON.stringify({entry_ids:[...state.sequence]})});state.run=j.run||state.run}catch(e){alert(e.message)}finally{state.submitting=false;pollRun()}}
+async function stop(){try{await api('/api/run/cancel',{method:'POST',body:'{}'});pollRun()}catch(e){alert(e.message)}}
+let pollTimer=null;
+async function pollRun(){if(pollTimer){clearTimeout(pollTimer);pollTimer=null}try{const j=await api('/api/run');const r=j.run;state.run=r;$('runPill').textContent=r.status;$('runPill').className=`pill ${r.status==='idle'||r.status==='completed'?'ok':r.status==='failed'?'bad':''}`;$('runOutput').textContent=JSON.stringify(r,null,2);$('stopBtn').disabled=!runBusy();renderSequence()}catch(e){}finally{pollTimer=setTimeout(pollRun,1000)}}
+['search','functionFilter','reviewFilter'].forEach(id=>$(id).addEventListener('input',renderList));
+$('watched').onchange=updateButtons;$('approveBtn').onclick=()=>setReview('approved');$('rejectBtn').onclick=()=>setReview('rejected');$('pendingBtn').onclick=()=>setReview('pending');$('validateBtn').onclick=validate;$('playBtn').onclick=play;$('stopBtn').onclick=stop;$('addSequenceBtn').onclick=addSequence;$('clearSequenceBtn').onclick=clearSequence;$('playSequenceBtn').onclick=playSequence;$('sequenceQueue').onclick=e=>{const button=e.target.closest('button[data-sequence-action]');if(button)editSequence(button.dataset.sequenceAction,Number(button.dataset.index))};
+load().catch(e=>{document.body.innerHTML=`<pre>${esc(e.stack||e.message)}</pre>`});
+</script>
+</body>
+</html>

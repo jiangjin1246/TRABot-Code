@@ -1,0 +1,21 @@
+{
+  "schema": "g1_atom_limits_v1",
+  "source": "G1 29-DoF MuJoCo position ranges with a 0.05 rad margin; Atom body segment velocity is measured but not gated",
+  "position_margin_rad": 0.05,
+  "joints": {
+    "left_shoulder_pitch": {"min_rad": -3.0892, "max_rad": 2.6704},
+    "left_shoulder_roll": {"min_rad": -1.5882, "max_rad": 2.2515},
+    "left_shoulder_yaw": {"min_rad": -2.618, "max_rad": 2.618},
+    "left_elbow": {"min_rad": -1.0472, "max_rad": 2.0944},
+    "left_wrist_roll": {"min_rad": -1.97222, "max_rad": 1.97222},
+    "left_wrist_pitch": {"min_rad": -1.61443, "max_rad": 1.61443},
+    "left_wrist_yaw": {"min_rad": -1.61443, "max_rad": 1.61443},
+    "right_shoulder_pitch": {"min_rad": -3.0892, "max_rad": 2.6704},
+    "right_shoulder_roll": {"min_rad": -2.2515, "max_rad": 1.5882},
+    "right_shoulder_yaw": {"min_rad": -2.618, "max_rad": 2.618},
+    "right_elbow": {"min_rad": -1.0472, "max_rad": 2.0944},
+    "right_wrist_roll": {"min_rad": -1.97222, "max_rad": 1.97222},
+    "right_wrist_pitch": {"min_rad": -1.61443, "max_rad": 1.61443},
+    "right_wrist_yaw": {"min_rad": -1.61443, "max_rad": 1.61443}
+  }
+}

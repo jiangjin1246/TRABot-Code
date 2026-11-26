@@ -1,0 +1,156 @@
+{
+  "schema_version": "dialogue_function_17_v1",
+  "label_scope": "planner_function",
+  "derived_from": "f18_codebook_v1",
+  "excluded_functions": [
+    {
+      "function": "present_explain",
+      "reason": "The formal 118-item human review retained zero Approved examples; the class is removed rather than exposed as an empty Planner choice."
+    }
+  ],
+  "functions": [
+    {
+      "function": "emphasize",
+      "planner_category": "emphasis",
+      "common_families": [
+        "beat"
+      ],
+      "definition_zh": "突出当前话语中的重点或节奏重音。"
+    },
+    {
+      "function": "enumerate",
+      "planner_category": "enumeration",
+      "common_families": [
+        "beat",
+        "metaphoric"
+      ],
+      "definition_zh": "枚举项目、步骤或数量关系。"
+    },
+    {
+      "function": "contrast_compare",
+      "planner_category": "contrast",
+      "common_families": [
+        "metaphoric"
+      ],
+      "definition_zh": "表达对照、比较或两侧差异。"
+    },
+    {
+      "function": "refer_self",
+      "planner_category": "reference",
+      "common_families": [
+        "deictic"
+      ],
+      "definition_zh": "指向说话者自身。"
+    },
+    {
+      "function": "refer_other",
+      "planner_category": "reference",
+      "common_families": [
+        "deictic"
+      ],
+      "definition_zh": "指向对话中的另一人。"
+    },
+    {
+      "function": "refer_external",
+      "planner_category": "reference",
+      "common_families": [
+        "deictic"
+      ],
+      "definition_zh": "指向外部对象、方向或位置。"
+    },
+    {
+      "function": "depict_size_shape",
+      "planner_category": "depiction",
+      "common_families": [
+        "iconic"
+      ],
+      "definition_zh": "描绘尺寸、范围、轮廓或形状。"
+    },
+    {
+      "function": "depict_direction_motion",
+      "planner_category": "depiction",
+      "common_families": [
+        "iconic"
+      ],
+      "definition_zh": "描绘方向、路径或运动方式。"
+    },
+    {
+      "function": "turn_open",
+      "planner_category": "turn_management",
+      "common_families": [
+        "beat",
+        "metaphoric"
+      ],
+      "definition_zh": "开启话轮、引入发言或吸引注意。"
+    },
+    {
+      "function": "turn_yield",
+      "planner_category": "turn_management",
+      "common_families": [
+        "beat",
+        "emblem"
+      ],
+      "definition_zh": "结束或让出话轮，邀请对方继续。"
+    },
+    {
+      "function": "greet_farewell",
+      "planner_category": "social",
+      "common_families": [
+        "emblem"
+      ],
+      "definition_zh": "问候或告别的社交惯用动作。"
+    },
+    {
+      "function": "thank",
+      "planner_category": "social",
+      "common_families": [
+        "emblem"
+      ],
+      "definition_zh": "表达感谢。"
+    },
+    {
+      "function": "affirm",
+      "planner_category": "social",
+      "common_families": [
+        "emblem"
+      ],
+      "definition_zh": "表达同意、肯定或确认。"
+    },
+    {
+      "function": "deny",
+      "planner_category": "social",
+      "common_families": [
+        "emblem"
+      ],
+      "definition_zh": "表达否定、拒绝或不同意。"
+    },
+    {
+      "function": "certainty",
+      "planner_category": "stance",
+      "common_families": [
+        "metaphoric",
+        "emblem"
+      ],
+      "definition_zh": "表达确定、自信或强确信度。"
+    },
+    {
+      "function": "uncertainty",
+      "planner_category": "stance",
+      "common_families": [
+        "metaphoric",
+        "emblem"
+      ],
+      "definition_zh": "表达不确定、犹豫或保留。"
+    },
+    {
+      "function": "enthusiasm",
+      "planner_category": "stance",
+      "common_families": [
+        "metaphoric",
+        "emblem"
+      ],
+      "definition_zh": "表达热情、兴奋或积极投入。"
+    }
+  ],
+  "separation_rule": "BEAT raw family is source evidence only and must never be copied directly into a dialogue_function_17_v1 planner label."
+}

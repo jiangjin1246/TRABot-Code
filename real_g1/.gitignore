@@ -1,0 +1,57 @@
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+config.env
+config.env.*
+!config.env.example
+credentials*.json
+client_secret*.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime and generated output
+runtime/
+gradio_results/
+outputs/
+generated/
+*.log
+*.pid
+nohup.out
+
+# External assets created by scripts/setup_links.sh. These are absolute
+# machine-local symlinks and are rebuilt instead of versioned.
+/models
+/examples
+/flash_head
+/motions/joint_presentation_gesture.json
+/motions/joint_presentation_gesture_b.json
+/motions/joint_presentation_gesture_c.json
+/motions/joint_release_arm_pose.json
+
+# Python and editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.DS_Store
+.idea/
+.vscode/
+
+# Prevent accidental commits of model weights.
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx

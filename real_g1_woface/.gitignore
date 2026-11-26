@@ -1,0 +1,52 @@
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+config.env
+config.env.*
+!config.env.example
+credentials*.json
+client_secret*.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime and generated output
+# Keep the empty dirs build_app expects; ignore what runs write into them.
+runtime/*
+!runtime/.gitkeep
+gradio_results/*/*
+!gradio_results/*/.gitkeep
+outputs/
+generated/
+*.log
+*.pid
+nohup.out
+
+# The Web app, Atom library and Unitree SDK are shared from ../face, ../catalog and ../external.
+
+# Python and editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.DS_Store
+.idea/
+.vscode/
+
+# Prevent accidental commits of model weights.
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
